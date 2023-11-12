@@ -32,12 +32,23 @@ public class AlquilerController {
         return ResponseEntity.ok(alquiler);
     }
 
-    @PutMapping("/{id}")
+    /*@PutMapping("/{id}")
     public ResponseEntity<Alquiler> put(@PathVariable long id, @RequestBody Alquiler alquilerB){
         Alquiler alquiler = alquilerService.put(id,alquilerB);
         if(alquiler != null) {
             return ResponseEntity.ok(alquiler);
         }else{
+            return ResponseEntity.notFound().build();
+        }
+    }*/
+
+
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<Alquiler> finalizar(@PathVariable long id, @RequestParam(required = false, defaultValue = "ARS") String moneda) {
+        Alquiler alquiler = alquilerService.finalizarAlquiler(id, moneda);
+        if (alquiler != null) {
+            return ResponseEntity.ok(alquiler);
+        } else {
             return ResponseEntity.notFound().build();
         }
     }
