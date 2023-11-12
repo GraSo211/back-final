@@ -5,8 +5,7 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
+
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -38,16 +37,17 @@ public class GWConfig {
                 .build();
     }
 
-    /*@Bean
+    /*
+    @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange(exchanges -> exchanges
 
 
-                        .pathMatchers(HttpMethod.GET, "/api/personas/**")
-                        .hasRole("KEMPES_ADMIN")
+                        .pathMatchers(HttpMethod.GET, "/api/alquileres/**")
+                        .hasRole("CLIENTE")
 
-                        .pathMatchers("/api/entradas/**")
-                        .hasRole("KEMPES_ORGANIZADOR")
+                        .pathMatchers("/api/estaciones/**")
+                        .hasRole("ADMIN")
 
                         // Cualquier otra petición...
                         .anyExchange()
@@ -77,8 +77,8 @@ public class GWConfig {
         // jwtAuthenticationConverter.setPrincipalClaimName("user_name");
 
         return jwtAuthenticationConverter;
-    }
-    */
+    } */
+
 
 
 }
