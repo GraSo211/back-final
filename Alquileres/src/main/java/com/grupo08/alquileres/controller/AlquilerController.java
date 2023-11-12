@@ -1,6 +1,7 @@
 package com.grupo08.alquileres.controller;
 
 import com.grupo08.alquileres.model.Alquiler;
+import com.grupo08.alquileres.model.ResponseDTO;
 import com.grupo08.alquileres.service.AlquilerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +16,14 @@ public class AlquilerController {
     private AlquilerService alquilerService;
 
     @GetMapping
-    public ResponseEntity<List<Alquiler>> getAll(){
-        List<Alquiler> alquilerList = alquilerService.getAll();
-        return ResponseEntity.ok(alquilerList);
+    public ResponseEntity<List<ResponseDTO>> getAll(){
+        ResponseEntity<List<ResponseDTO>> responseEntity = alquilerService.getAll();
+        return ResponseEntity.status(responseEntity.getStatusCode()).body(responseEntity.getBody());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Alquiler> getById(@PathVariable long id){
-        Alquiler alquiler = alquilerService.getById(id);
-        return ResponseEntity.ok(alquiler);
+    public ResponseEntity<ResponseDTO> getById(@PathVariable long id){
+        return alquilerService.getById(id);
     }
 
     @PostMapping
@@ -56,5 +56,8 @@ public class AlquilerController {
         }
         return ResponseEntity.ok(alquilerList);
     }
+
+
+
 
 }
