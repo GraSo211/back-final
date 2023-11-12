@@ -26,12 +26,17 @@ public class GWConfig {
                 // Ruteo al Microservicio de Estaciones
                 .route(p -> p.path("/api/estaciones/**").uri(uriEstaciones))
                 // Ruteo al Microservicio de Alquileres
-                .route(p -> p.path("/api/entradas/**").uri(uriAlquileres))
+                .route(p -> p.path("/api/alquileres/**").uri(uriAlquileres))
                 // Ruteo al Microservicio de Tarifas
                 .route(p -> p.path("/api/tarifas/**").uri(uriTarifas))
                 .build();
     }
-
+    @Bean
+    public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
+        return http.authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
+                .csrf(csrf -> csrf.disable())
+                .build();
+    }
 
     /*@Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) throws Exception {

@@ -27,13 +27,13 @@ public class EstacionController {
         return ResponseEntity.ok(estacion);
     }
 
-    @PostMapping("/admin")
+    @PostMapping("/")
     public ResponseEntity<Estacion> post(@RequestBody Estacion estacionB){
         Estacion estacion = estacionService.post(estacionB);
         return ResponseEntity.ok(estacion);
     }
 
-    @PutMapping("/admin/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Estacion> put(@PathVariable long id, @RequestBody Estacion estacionB){
         Estacion estacion = estacionService.put(id,estacionB);
         if(estacion != null) {
@@ -43,7 +43,7 @@ public class EstacionController {
         }
     }
 
-    @DeleteMapping("/admin/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable long id){
         estacionService.delete(id);
         return ResponseEntity.noContent().build();
