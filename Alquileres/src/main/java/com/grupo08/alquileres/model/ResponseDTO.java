@@ -11,5 +11,5 @@ public class ResponseDTO {
     private Alquiler alquiler;
     private EstacionDTO estacionRetDTO;
     private EstacionDTO estacionDevDTO;
-
+    private TarifaDTO tarifaDTO;
 }

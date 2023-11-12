@@ -3,30 +3,23 @@ package com.grupo08.alquileres.service;
 import com.grupo08.alquileres.model.Alquiler;
 import com.grupo08.alquileres.model.EstacionDTO;
 import com.grupo08.alquileres.model.ResponseDTO;
+import com.grupo08.alquileres.model.TarifaDTO;
 import com.grupo08.alquileres.repository.AlquilerRepository;
 import com.grupo08.estaciones.model.Estacion;
 import com.grupo08.estaciones.repository.EstacionRepository;
 import com.grupo08.tarifas.model.Tarifa;
 import com.grupo08.tarifas.repository.TarifaRepository;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ClientHttpResponseDecorator;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
 import org.json.JSONObject;
-import java.io.StringReader;
 import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -55,11 +48,14 @@ public class AlquilerService {
                 ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionDevolucion(), EstacionDTO.class);
                 EstacionDTO estacionDTO2 = responseEntity2.getBody();
 
+                ResponseEntity<TarifaDTO> responseEntity3 = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + alquiler.getIdTarifa(), TarifaDTO.class);
+                TarifaDTO tarifaDTO = responseEntity3.getBody();
+
                 ResponseDTO responseDTO = new ResponseDTO();
                 responseDTO.setAlquiler(alquiler);
                 responseDTO.setEstacionRetDTO(estacionDTO);
                 responseDTO.setEstacionDevDTO(estacionDTO2);
-
+                responseDTO.setTarifaDTO(tarifaDTO);
                 responseDTOList.add(responseDTO);
             }
             return new ResponseEntity<>(responseDTOList, HttpStatus.OK);
@@ -76,11 +72,17 @@ public class AlquilerService {
             Alquiler alquiler = optionalAlquiler.get();
             ResponseEntity<EstacionDTO> responseEntity = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionRetiro(), EstacionDTO.class);
             EstacionDTO estacionDTO = responseEntity.getBody();
+
             ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionDevolucion(), EstacionDTO.class);
             EstacionDTO estacionDTO2 = responseEntity2.getBody();
+
+            ResponseEntity<TarifaDTO> responseEntity3 = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + alquiler.getIdTarifa(), TarifaDTO.class);
+            TarifaDTO tarifaDTO = responseEntity3.getBody();
+
             responseDTO.setAlquiler(alquiler);
             responseDTO.setEstacionRetDTO(estacionDTO);
             responseDTO.setEstacionDevDTO(estacionDTO2);
+            responseDTO.setTarifaDTO(tarifaDTO);
             return new ResponseEntity<>(responseDTO, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
