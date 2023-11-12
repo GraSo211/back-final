@@ -4,7 +4,8 @@ import com.grupo08.alquileres.model.Alquiler;
 import com.grupo08.alquileres.repository.AlquilerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,5 +52,9 @@ public class AlquilerService {
         alquilerRepository.deleteById(id);
     }
 
+    public List<Alquiler> getAllByFilter(int estado) {
+        List<Alquiler> alquilerList = alquilerRepository.findByEstado(estado);
+        return alquilerList;
+    }
 
 }

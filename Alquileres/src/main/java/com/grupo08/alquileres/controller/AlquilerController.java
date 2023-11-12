@@ -1,8 +1,5 @@
 package com.grupo08.alquileres.controller;
 
-
-
-
 import com.grupo08.alquileres.model.Alquiler;
 import com.grupo08.alquileres.service.AlquilerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/alquileres")
@@ -52,7 +48,13 @@ public class AlquilerController {
         return ResponseEntity.noContent().build();
     }
 
-
-
+    @GetMapping("/filtered")
+    public ResponseEntity<List<Alquiler>> getFiltered(@RequestParam(name = "estado") int estado) {
+        List<Alquiler> alquilerList = alquilerService.getAllByFilter(estado);
+        if (alquilerList.isEmpty()) {
+            return ResponseEntity.noContent().build(); // No se encontraron elementos que cumplan el filtro
+        }
+        return ResponseEntity.ok(alquilerList);
+    }
 
 }
