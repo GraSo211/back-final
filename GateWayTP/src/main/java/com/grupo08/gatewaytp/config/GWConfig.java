@@ -5,9 +5,13 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
@@ -15,9 +19,6 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class GWConfig {
     @Bean
     public RouteLocator configurarRutas(RouteLocatorBuilder builder,
-                                        /*@Value("${gatewayTP.url-estaciones}") String uriEstaciones,
-                                        @Value("${gatewayTP.url-alquileres}") String uriAlquileres,
-                                        @Value("${gatewayTP.url-tarifas}") String uriTarifas) */
                                         @Value("http://localhost:8081") String uriEstaciones,
                                         @Value("http://localhost:8082") String uriAlquileres,
                                         @Value("http://localhost:8083") String uriTarifas){
@@ -30,24 +31,29 @@ public class GWConfig {
                 .route(p -> p.path("/api/tarifas/**").uri(uriTarifas))
                 .build();
     }
-    @Bean
-    public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
-        return http.authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
-                .csrf(csrf -> csrf.disable())
-                .build();
-    }
 
-    /*
+
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange(exchanges -> exchanges
 
 
-                        .pathMatchers(HttpMethod.GET, "/api/alquileres/**")
+                        .pathMatchers(HttpMethod.POST, "/api/alquileres/**")
+                        .hasRole("CLIENTE")
+                        .pathMatchers(HttpMethod.PUT, "/api/alquileres/**")
+                        .hasRole("CLIENTE")
+
+                        .pathMatchers(HttpMethod.GET, "/api/estaciones/**")
                         .hasRole("CLIENTE")
 
                         .pathMatchers("/api/estaciones/**")
-                        .hasRole("ADMIN")
+                        .hasRole("ADMINISTRADOR")
+
+                        .pathMatchers("/api/alquileres/**")
+                        .hasRole("ADMINISTRADOR")
+
+                        .pathMatchers("/api/tarifas/**")
+                        .hasRole("ADMINISTRADOR")
 
                         // Cualquier otra petición...
                         .anyExchange()
@@ -64,21 +70,16 @@ public class GWConfig {
         var jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
         var grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
 
-        // Se especifica el nombre del claim a analizar
         grantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
-        // Se agrega este prefijo en la conversión por una convención de Spring
+
         grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
-        // Se asocia el conversor de Authorities al Bean que convierte el token JWT a un objeto Authorization
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
                 new ReactiveJwtGrantedAuthoritiesConverterAdapter(grantedAuthoritiesConverter));
-        // También se puede cambiar el claim que corresponde al nombre que luego se utilizará en el objeto
-        // Authorization
-        // jwtAuthenticationConverter.setPrincipalClaimName("user_name");
+
 
         return jwtAuthenticationConverter;
-    } */
-
+    }
 
 
 }

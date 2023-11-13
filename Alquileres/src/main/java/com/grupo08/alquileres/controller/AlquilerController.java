@@ -42,7 +42,7 @@ public class AlquilerController {
         }
     }*/
 
-    @PutMapping("/{id}/finalizar")
+    /*@PutMapping("/{id}/finalizar")
     public ResponseEntity<Alquiler> finalizar(@PathVariable long id, @RequestParam(required = false, defaultValue = "ARS") String moneda) {
         Alquiler alquiler = alquilerService.finalizarAlquiler(id, moneda);
         if (alquiler != null) {
@@ -50,7 +50,7 @@ public class AlquilerController {
         } else {
             return ResponseEntity.notFound().build();
         }
-    }
+    }*/
 
 
     @DeleteMapping("/{id}")

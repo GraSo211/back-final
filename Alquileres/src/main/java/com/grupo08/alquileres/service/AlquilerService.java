@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
-import org.json.JSONObject;
 import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -113,7 +112,7 @@ public class AlquilerService {
         }
     }
 
-    public Alquiler finalizarAlquiler(long idAlquiler, String moneda) {
+    /*public Alquiler finalizarAlquiler(long idAlquiler, String moneda) {
         Optional<Alquiler> alquilerOptional = alquilerRepository.findById(idAlquiler);
         if (alquilerOptional.isPresent()) {
             Alquiler alquiler = alquilerOptional.get();
@@ -157,13 +156,13 @@ public class AlquilerService {
 
         // Descuento para los días promocionales
         // No encuentro los dias de la semana en los que hay descuento en la bse de datos..
-        /*if (esDiaPromocional(alquiler.getFechaHoraRetiro())) {
+        if (esDiaPromocional(alquiler.getFechaHoraRetiro())) {
             double descuento = obtenerDescuento(alquiler.getFechaHoraRetiro());
             monto -= monto * descuento;
-        }*/
+        }
 
         return monto;
-    }
+    }*/
 
     public void delete(long id){
         alquilerRepository.deleteById(id);
@@ -174,7 +173,7 @@ public class AlquilerService {
         return alquilerList;
     }
 
-    private double calcularDistancia(long idEstacionRetiro, long idEstacionDevolucion) {
+    /*private double calcularDistancia(long idEstacionRetiro, long idEstacionDevolucion) {
         Optional<Estacion> estacionRetiroOptional = estacionRepository.findById(idEstacionRetiro);
         Optional<Estacion> estacionDevolucionOptional = estacionRepository.findById(idEstacionDevolucion);
 
@@ -219,6 +218,6 @@ public class AlquilerService {
         // Calcular la tasa de cambio
 
         return importe / 1000;
-    }
+    }*/
 
 }
