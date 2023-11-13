@@ -33,5 +33,5 @@ package com.grupo08.alquileres.model;
         @Column(name = "MONTO")
         private Double monto;
         @Column(name = "ID_TARIFA")
-        private long idTarifa;
+        private Long idTarifa;
     }

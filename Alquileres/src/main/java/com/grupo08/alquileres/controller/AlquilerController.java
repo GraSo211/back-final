@@ -36,12 +36,11 @@ public class AlquilerController {
     @PostMapping("/iniciar")
     public ResponseEntity<Alquiler> postIniciarAlquiler(@RequestBody Alquiler alquilerB){
         alquilerB.setFechaHoraRetiro(LocalDateTime.now());
-        alquilerB.setEstado(1);
         alquilerB.setFechaHoraDevolucion(null);
+        alquilerB.setEstado(1);
         alquilerB.setEstacionDevolucion(null);
         alquilerB.setMonto(null);
-
-
+        alquilerB.setIdTarifa(null);
         Alquiler alquiler = alquilerService.postIniciarAlquiler(alquilerB);
         return ResponseEntity.ok(alquiler);
     }
