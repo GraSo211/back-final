@@ -1,40 +1,34 @@
 package com.grupo08.alquileres.service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import org.json.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 public class CurrencyConverter {
-    public static void main(String[] args) {
-        // Cambiar estas variables, esta hardcodeado para testear
-        String destino = "USD";
-        double importe = 1000;
+    // Este es un llamado a una api externa para pasasr de una moneda a otra.
 
-        String apiUrl = "http://34.82.105.125:8080/convertir";
+    public double cambioDeMoneda(String moneda, double importe) {
+        RestTemplate restTemplate = new RestTemplate();
 
-        String requestBody = String.format("{\"moneda_destino\":\"%s\",\"importe\":%f}", destino, importe);
+        // Crear el objeto de solicitud
+        String jsonRequest = "{\"moneda_destino\":\"" + moneda + "\",\"importe\":" + importe + "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
 
-        String response = sendPostRequest(apiUrl, requestBody);
+        // Hacer la solicitud POST
+        ResponseEntity<String> response = restTemplate.exchange("http://34.82.105.125:8080/convertir", HttpMethod.POST, entity, String.class);
 
-        System.out.println("API Response: " + response);
-    }
+        // Parsear la respuesta
+        String jsonResponse = response.getBody();
+        JSONObject jsonObject = new JSONObject(jsonResponse);
+        double importeConvertido = jsonObject.getDouble("importe");
 
-    private static String sendPostRequest(String apiUrl, String requestBody) {
-        HttpClient httpClient = HttpClient.newHttpClient();
+        // Calcular la tasa de cambio
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
-
-        try {
-            HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return httpResponse.body();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        return importeConvertido / 1000;
     }
 }
