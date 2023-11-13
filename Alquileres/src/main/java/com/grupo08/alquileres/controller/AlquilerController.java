@@ -15,7 +15,7 @@ public class AlquilerController {
     @Autowired
     private AlquilerService alquilerService;
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<ResponseDTO>> getAll(){
         ResponseEntity<List<ResponseDTO>> responseEntity = alquilerService.getAll();
         return ResponseEntity.status(responseEntity.getStatusCode()).body(responseEntity.getBody());
@@ -26,7 +26,7 @@ public class AlquilerController {
         return alquilerService.getById(id);
     }
 
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<Alquiler> post(@RequestBody Alquiler alquilerB){
         Alquiler alquiler = alquilerService.post(alquilerB);
         return ResponseEntity.ok(alquiler);

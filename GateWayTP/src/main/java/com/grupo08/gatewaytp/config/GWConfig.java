@@ -36,30 +36,17 @@ public class GWConfig {
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange(exchanges -> exchanges
-
-
-                        .pathMatchers(HttpMethod.POST, "/api/alquileres/**")
-                        .hasRole("CLIENTE")
-                        .pathMatchers(HttpMethod.PUT, "/api/alquileres/**")
-                        .hasRole("CLIENTE")
-
-                        .pathMatchers(HttpMethod.GET, "/api/estaciones/**")
-                        .hasRole("CLIENTE")
-
-                        .pathMatchers("/api/estaciones/**")
-                        .hasRole("ADMINISTRADOR")
-
-                        .pathMatchers("/api/alquileres/**")
-                        .hasRole("ADMINISTRADOR")
-
-                        .pathMatchers("/api/tarifas/**")
-                        .hasRole("ADMINISTRADOR")
+                        .pathMatchers(HttpMethod.GET, "/api/alquileres/**").hasRole("ADMINISTRADOR")
+                        .pathMatchers(HttpMethod.DELETE, "/api/alquileres/**").hasRole("ADMINISTRADOR")
+                        .pathMatchers(HttpMethod.POST, "/api/estaciones/**").hasRole("ADMINISTRADOR")
+                        .pathMatchers(HttpMethod.PUT, "/api/estaciones/**").hasRole("ADMINISTRADOR")
+                        .pathMatchers(HttpMethod.DELETE, "/api/estaciones/**").hasRole("ADMINISTRADOR")
+                        .pathMatchers("/api/tarifas/**").hasRole("ADMINISTRADOR")
 
                         // Cualquier otra petición...
-                        .anyExchange()
-                        .authenticated()
-
-                ).oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                        .anyExchange().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .csrf(csrf -> csrf.disable());
         return http.build();
     }

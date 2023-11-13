@@ -16,7 +16,7 @@ public class TarifaController {
     @Autowired
     private TarifaService tarifaService ;
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<Tarifa>> getAll(){
         List<Tarifa> tarifaList = tarifaService.getAll();
         return ResponseEntity.ok(tarifaList);
@@ -28,7 +28,7 @@ public class TarifaController {
         return ResponseEntity.ok(tarifa);
     }
 
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<Tarifa> post(@RequestBody Tarifa tarifaB){
         Tarifa tarifa = tarifaService.post(tarifaB);
         return ResponseEntity.ok(tarifa);

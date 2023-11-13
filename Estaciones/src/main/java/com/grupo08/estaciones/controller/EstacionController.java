@@ -15,7 +15,7 @@ public class EstacionController {
     @Autowired
     private EstacionService estacionService ;
 
-    @GetMapping()
+    @GetMapping("/")
     public ResponseEntity<List<Estacion>> getAll(){
         List<Estacion> estacionList = estacionService.getAll();
         return ResponseEntity.ok(estacionList);
