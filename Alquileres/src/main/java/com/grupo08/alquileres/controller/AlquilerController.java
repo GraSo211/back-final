@@ -32,6 +32,7 @@ public class AlquilerController {
         return ResponseEntity.ok(alquiler);
     }
 
+
     /*@PutMapping("/{id}")
     public ResponseEntity<Alquiler> put(@PathVariable long id, @RequestBody Alquiler alquilerB){
         Alquiler alquiler = alquilerService.put(id,alquilerB);

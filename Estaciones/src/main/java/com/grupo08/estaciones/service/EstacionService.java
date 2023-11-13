@@ -52,16 +52,11 @@ public class EstacionService {
         //hacemos esto hasta obtener la menor de todas
         //retornamos esa estacion
 
-
         List<Estacion> estacionList = getAll();
-
-
-
         System.out.println(estacionList);
 
         Estacion estacionMenorDistancia = null;
         Double menorDistancia = 0D;
-
         for (Estacion estacion:estacionList) {
             Double latitudE = estacion.getLatitud();
             Double longitudE = estacion.getLongitud();
@@ -69,15 +64,10 @@ public class EstacionService {
             if(estacionMenorDistancia == null){
                 estacionMenorDistancia = estacion;
                 menorDistancia = distancia;
-                System.out.println("LA MENOR DISTANCIA POR PRIMERA VEZ ES: " + menorDistancia);
-                System.out.println("LA MENOR ESTACION  POR PRIMERA VEZ ES: " + estacionMenorDistancia );
             }else{
                 if (menorDistancia>distancia){
-                    System.out.println("CUANDO YA PASO LA PRIMERA VEZ, LA MENOR DISTANCIA VIEJA ES: " + menorDistancia);
-                    System.out.println("\nCUANDO YA PASO LA PRIMERA VEZ, LA DISTANCIA NUEVA ES: " + distancia);
                     estacionMenorDistancia = estacion;
                     menorDistancia = distancia;
-                    System.out.println("LA NUEVA MENOR ESTACION ES: " + estacionMenorDistancia );
                 }
             }
         }
@@ -86,6 +76,6 @@ public class EstacionService {
 
     public Double calcularDistancia(Double latitudC, Double longitudC, Double latitudE, Double longitudE ){
         Double distancia = Math.sqrt(Math.pow(latitudE - latitudC,2) + Math.pow(longitudE-longitudC,2));
-        return distancia * 110000;
+        return distancia * 110;
     }
 }
