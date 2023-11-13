@@ -23,15 +23,15 @@ package com.grupo08.alquileres.model;
         @Column(name = "ESTADO")
         private int estado;
         @Column(name = "ESTACION_RETIRO")
-        private long estacionRetiro;
+        private Long estacionRetiro;
         @Column(name = "ESTACION_DEVOLUCION")
-        private long estacionDevolucion;
+        private Long estacionDevolucion;
         @Column(name = "FECHA_HORA_RETIRO")
         private LocalDateTime fechaHoraRetiro;
         @Column(name = "FECHA_HORA_DEVOLUCION")
         private LocalDateTime fechaHoraDevolucion;
         @Column(name = "MONTO")
-        private double monto;
+        private Double monto;
         @Column(name = "ID_TARIFA")
         private long idTarifa;
     }

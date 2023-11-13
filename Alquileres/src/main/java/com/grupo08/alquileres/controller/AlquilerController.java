@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -32,6 +33,18 @@ public class AlquilerController {
         return ResponseEntity.ok(alquiler);
     }
 
+    @PostMapping("/iniciar")
+    public ResponseEntity<Alquiler> postIniciarAlquiler(@RequestBody Alquiler alquilerB){
+        alquilerB.setFechaHoraRetiro(LocalDateTime.now());
+        alquilerB.setEstado(1);
+        alquilerB.setFechaHoraDevolucion(null);
+        alquilerB.setEstacionDevolucion(null);
+        alquilerB.setMonto(null);
+
+
+        Alquiler alquiler = alquilerService.postIniciarAlquiler(alquilerB);
+        return ResponseEntity.ok(alquiler);
+    }
 
     /*@PutMapping("/{id}")
     public ResponseEntity<Alquiler> put(@PathVariable long id, @RequestBody Alquiler alquilerB){

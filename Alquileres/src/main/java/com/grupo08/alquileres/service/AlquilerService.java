@@ -82,6 +82,12 @@ public class AlquilerService {
     }
 
 
+    public Alquiler postIniciarAlquiler(Alquiler alquilerB){
+        Alquiler alquiler = alquilerRepository.save(alquilerB);
+        System.out.println(alquiler);
+        return alquiler;
+    }
+
     public Alquiler post(Alquiler alquilerB){
         Alquiler alquiler = alquilerRepository.save(alquilerB);
         System.out.println(alquiler);
