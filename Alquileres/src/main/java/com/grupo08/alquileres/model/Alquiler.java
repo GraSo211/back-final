@@ -1,6 +1,5 @@
 package com.grupo08.alquileres.model;
 
-
     import jakarta.persistence.*;
     import lombok.AllArgsConstructor;
     import lombok.Data;
@@ -34,4 +33,5 @@ package com.grupo08.alquileres.model;
         private double monto;
         @Column(name = "ID_TARIFA")
         private long idTarifa;
+
     }

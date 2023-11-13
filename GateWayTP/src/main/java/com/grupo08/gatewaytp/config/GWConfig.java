@@ -13,6 +13,10 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @Configuration
 @EnableWebFluxSecurity
 public class GWConfig {
+
+
+
+
     @Bean
     public RouteLocator configurarRutas(RouteLocatorBuilder builder,
                                         /*@Value("${gatewayTP.url-estaciones}") String uriEstaciones,

@@ -6,18 +6,14 @@ import com.grupo08.alquileres.model.ResponseDTO;
 import com.grupo08.alquileres.model.TarifaDTO;
 import com.grupo08.alquileres.repository.AlquilerRepository;
 import com.grupo08.estaciones.model.Estacion;
-import com.grupo08.estaciones.repository.EstacionRepository;
 import com.grupo08.tarifas.model.Tarifa;
-import com.grupo08.tarifas.repository.TarifaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpMethod;
-import org.json.JSONObject;
+
 import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,13 +24,8 @@ import java.util.Optional;
 public class AlquilerService {
 
     @Autowired
-    private AlquilerRepository alquilerRepository;
-    private TarifaRepository tarifaRepository;
-    private EstacionRepository estacionRepository;
-
-
-    @Autowired
     private RestTemplate restTemplate;
+    private AlquilerRepository alquilerRepository;
 
     public ResponseEntity<List<ResponseDTO>> getAll(){
         List<ResponseDTO> responseDTOList = new ArrayList<>();
@@ -113,6 +104,15 @@ public class AlquilerService {
         }
     }
 
+    public void delete(long id){
+        alquilerRepository.deleteById(id);
+    }
+
+    public List<Alquiler> getAllByFilter(int estado) {
+        List<Alquiler> alquilerList = alquilerRepository.findByEstado(estado);
+        return alquilerList;
+    }
+
     public Alquiler finalizarAlquiler(long idAlquiler, String moneda) {
         Optional<Alquiler> alquilerOptional = alquilerRepository.findById(idAlquiler);
         if (alquilerOptional.isPresent()) {
@@ -120,14 +120,15 @@ public class AlquilerService {
             alquiler.setFechaHoraDevolucion(LocalDateTime.now());
             alquiler.setEstado(1); // Estado finalizado
 
-            Optional<Tarifa> tarifaOptional = tarifaRepository.findById(alquiler.getIdTarifa());
+            Optional<Tarifa> tarifaOptional = (Optional<Tarifa>) invocarServicio("tarifas", alquiler.getIdTarifa());
+
             if (tarifaOptional.isPresent()) {
                 Tarifa tarifa = tarifaOptional.get();
-                double monto = calcularMonto(alquiler, tarifa);
+                double monto = calcularMonto(alquiler, tarifa.getId());
                 alquiler.setMonto(monto);
                 if (!moneda.equals("ARS")) {
-                    double tasaCambio = obtenerTasaCambio(moneda);
-                    alquiler.setMonto(monto * tasaCambio);
+                    double conversion = new CurrencyConverter().cambioDeMoneda(moneda, monto);
+                    alquiler.setMonto(Double.parseDouble(String.valueOf(conversion)));
                 }
                 alquilerRepository.save(alquiler);
                 return alquiler;
@@ -136,9 +137,13 @@ public class AlquilerService {
         return null;
     }
 
-    private double calcularMonto(Alquiler alquiler, Tarifa tarifa) {
+    private double calcularMonto(Alquiler alquiler, long id) {
         double monto = 0;
         long duracionEnMinutos = ChronoUnit.MINUTES.between(alquiler.getFechaHoraRetiro(), alquiler.getFechaHoraDevolucion());
+
+        // Se solicita un Alquiler al Microservicio de Tarifas una tarifa en particular
+        // y almacena la respuesta (tarifa solicitada)
+        Tarifa tarifa = (Tarifa) invocarServicio("tarifas", id);
 
         // Costo fijo por realizar el alquiler
         monto += tarifa.getMontoFijoAlquiler();
@@ -152,8 +157,8 @@ public class AlquilerService {
         }
 
         // Monto adicional por cada KM que separe la estación de retiro de la estación de devolución
-        double distancia = calcularDistancia(alquiler.getEstacionRetiro(), alquiler.getEstacionDevolucion());
-        monto += distancia * tarifa.getMontoKm();
+        // double distancia = calcularDistancia(alquiler.getEstacionRetiro(), alquiler.getEstacionDevolucion());
+        // monto += distancia * tarifa.getMontoKm();
 
         // Descuento para los días promocionales
         // No encuentro los dias de la semana en los que hay descuento en la bse de datos..
@@ -165,22 +170,13 @@ public class AlquilerService {
         return monto;
     }
 
-    public void delete(long id){
-        alquilerRepository.deleteById(id);
-    }
-
-    public List<Alquiler> getAllByFilter(int estado) {
-        List<Alquiler> alquilerList = alquilerRepository.findByEstado(estado);
-        return alquilerList;
-    }
-
     private double calcularDistancia(long idEstacionRetiro, long idEstacionDevolucion) {
-        Optional<Estacion> estacionRetiroOptional = estacionRepository.findById(idEstacionRetiro);
-        Optional<Estacion> estacionDevolucionOptional = estacionRepository.findById(idEstacionDevolucion);
+        Optional<Estacion> estacionR = (Optional<Estacion>) invocarServicio("estaciones", idEstacionRetiro);
+        Optional<Estacion> estacionD = (Optional<Estacion>) invocarServicio("estaciones", idEstacionDevolucion);
 
-        if (estacionRetiroOptional.isPresent() && estacionDevolucionOptional.isPresent()) {
-            Estacion estacionRetiro = estacionRetiroOptional.get();
-            Estacion estacionDevolucion = estacionDevolucionOptional.get();
+        if (estacionR.isPresent() && estacionD.isPresent()) {
+            Estacion estacionRetiro = estacionR.get();
+            Estacion estacionDevolucion = estacionD.get();
 
             double latitud1 = estacionRetiro.getLatitud();
             double longitud1 = estacionRetiro.getLongitud();
@@ -199,26 +195,64 @@ public class AlquilerService {
         return 0;
     }
 
-    private double obtenerTasaCambio(String moneda) {
-        RestTemplate restTemplate = new RestTemplate();
 
-        // Crear el objeto de solicitud
-        String jsonRequest = "{\"moneda_destino\":\"" + moneda + "\",\"importe\":1000}";
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        HttpEntity<String> entity = new HttpEntity<>(jsonRequest, headers);
+    public Object invocarServicio(String tipoServicio, long id) {
 
-        // Hacer la solicitud POST
-        ResponseEntity<String> response = restTemplate.exchange("http://34.82.105.125:8080/convertir", HttpMethod.POST, entity, String.class);
+        // Creación de una instancia de RestTemplate
+        try {
+            // Creación de la instancia de RequestTemplate
+            RestTemplate template = new RestTemplate();
 
-        // Parsear la respuesta
-        String jsonResponse = response.getBody();
-        JSONObject jsonObject = new JSONObject(jsonResponse);
-        double importe = jsonObject.getDouble("importe");
+            switch (tipoServicio) {
+                case "tarifas":
+                    // Se realiza una petición a http://localhost:8082/api/tarifas/{id}, indicando que id
+                    // respuesta de la petición tendrá en su cuerpo a un objeto del tipo Tarifa.
+                    ResponseEntity<Tarifa> resTarifa = template.getForEntity(
+                            "http://localhost:8083/api/tarifas/{id}", Tarifa.class, id
+                    );
+                    // Se comprueba si el código de repuesta es de la familia 200 y entrega el objeto de tipo Tarifa
+                    // para su disposición
+                    if (resTarifa.getStatusCode().is2xxSuccessful()) {
+                        return resTarifa.getBody();
+                    } else {
+                        return resTarifa.getHeaders();
+                    }
 
-        // Calcular la tasa de cambio
+                case "alquileres":
+                    // Se realiza una petición a http://localhost:8082/api/alquileres/{id}, indicando que id
+                    // respuesta de la petición tendrá en su cuerpo a un objeto del tipo Alquiler.
+                    ResponseEntity<Alquiler> resAlquiler = template.getForEntity(
+                            "http://localhost:8082/api/alquileres/{id}", Alquiler.class, id
+                    );
+                    // Se comprueba si el código de repuesta es de la familia 200 y entrega el objeto de tipo Tarifa
+                    // para su disposición
+                    if (resAlquiler.getStatusCode().is2xxSuccessful()) {
+                        return resAlquiler.getBody();
+                    } else {
+                        return resAlquiler.getHeaders();
+                    }
+                case "estaciones":
+                    // Se realiza una petición a http://localhost:8082/api/alquileres/{id}, indicando que id
+                    // respuesta de la petición tendrá en su cuerpo a un objeto del tipo Alquiler.
+                    ResponseEntity<Estacion> resEstacion = template.getForEntity(
+                            "http://localhost:8081/api/estaciones/{id}", Estacion.class, id
+                    );
+                    // Se comprueba si el código de repuesta es de la familia 200 y entrega el objeto de tipo Tarifa
+                    // para su disposición
+                    if (resEstacion.getStatusCode().is2xxSuccessful()) {
+                        return resEstacion.getBody();
+                    } else {
+                        return resEstacion.getHeaders();
+                    }
+                default:
+                    return null;
+            }
 
-        return importe / 1000;
+        } catch (HttpClientErrorException ex) {
+            // La repuesta no es exitosa.
+            return null;
+        }
     }
+
 
 }
