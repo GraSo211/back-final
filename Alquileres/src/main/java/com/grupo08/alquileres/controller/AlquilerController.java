@@ -45,7 +45,7 @@ public class AlquilerController {
         return ResponseEntity.ok(alquiler);
     }
 
-    /*@PutMapping("/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Alquiler> put(@PathVariable long id, @RequestBody Alquiler alquilerB){
         Alquiler alquiler = alquilerService.put(id,alquilerB);
         if(alquiler != null) {
@@ -53,17 +53,17 @@ public class AlquilerController {
         }else{
             return ResponseEntity.notFound().build();
         }
-    }*/
+    }
 
-    /*@PutMapping("/{id}/finalizar")
-    public ResponseEntity<Alquiler> finalizar(@PathVariable long id, @RequestParam(required = false, defaultValue = "ARS") String moneda) {
-        Alquiler alquiler = alquilerService.finalizarAlquiler(id, moneda);
+    @PutMapping("/finalizar/{id}")
+    public ResponseEntity<Alquiler> putFinalizarAlquiler(@PathVariable long id, @RequestParam(required = false, defaultValue = "ARS", name="moneda") String moneda, @RequestBody Alquiler alquilerB) {
+        Alquiler alquiler = alquilerService.putFinalizarAlquiler(id, moneda, alquilerB);
         if (alquiler != null) {
             return ResponseEntity.ok(alquiler);
         } else {
             return ResponseEntity.notFound().build();
         }
-    }*/
+    }
 
 
     @DeleteMapping("/{id}")

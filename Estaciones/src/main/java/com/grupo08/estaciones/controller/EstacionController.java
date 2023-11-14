@@ -51,8 +51,8 @@ public class EstacionController {
 
 
     @GetMapping("/estacionMasCercana")
-    public ResponseEntity<Estacion> prueba(@RequestParam(name = "latitud") Double latitudC, @RequestParam(name = "longitud") Double longitudC){
-        Estacion estacion = estacionService.menorDistante(latitudC,longitudC);
+    public ResponseEntity<Estacion> getCalcularDistancia(@RequestParam(name = "latitud") Double latitudC, @RequestParam(name = "longitud") Double longitudC){
+        Estacion estacion = estacionService.getCalcularDistancia(latitudC,longitudC);
         return ResponseEntity.ok(estacion);
     }
 }

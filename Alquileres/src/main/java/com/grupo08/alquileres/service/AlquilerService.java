@@ -5,8 +5,7 @@ import com.grupo08.alquileres.model.EstacionDTO;
 import com.grupo08.alquileres.model.ResponseDTO;
 import com.grupo08.alquileres.model.TarifaDTO;
 import com.grupo08.alquileres.repository.AlquilerRepository;
-import com.grupo08.estaciones.model.Estacion;
-import com.grupo08.tarifas.model.Tarifa;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -81,14 +80,13 @@ public class AlquilerService {
         }
     }
 
-
-    public Alquiler postIniciarAlquiler(Alquiler alquilerB){
+    public Alquiler post(Alquiler alquilerB){
         Alquiler alquiler = alquilerRepository.save(alquilerB);
         System.out.println(alquiler);
         return alquiler;
     }
 
-    public Alquiler post(Alquiler alquilerB){
+    public Alquiler postIniciarAlquiler(Alquiler alquilerB){
         Alquiler alquiler = alquilerRepository.save(alquilerB);
         System.out.println(alquiler);
         return alquiler;
@@ -120,81 +118,91 @@ public class AlquilerService {
         return alquilerList;
     }
 
-    public Alquiler finalizarAlquiler(long idAlquiler, String moneda) {
+    public Alquiler putFinalizarAlquiler(long idAlquiler, String moneda, Alquiler alquilerB) {
         Optional<Alquiler> alquilerOptional = alquilerRepository.findById(idAlquiler);
         if (alquilerOptional.isPresent()) {
             Alquiler alquiler = alquilerOptional.get();
             alquiler.setFechaHoraDevolucion(LocalDateTime.now());
-            alquiler.setEstado(1); // Estado finalizado
+            alquiler.setEstado(2); // Estado finalizado
+            alquiler.setEstacionDevolucion(alquilerB.getEstacionDevolucion());
+            alquiler.setIdTarifa(alquilerB.getIdTarifa());
 
-            Optional<Tarifa> tarifaOptional = (Optional<Tarifa>) invocarServicio("tarifas", alquiler.getIdTarifa());
+            double minutos = calcularMinutos(alquiler.getFechaHoraRetiro(), alquiler.getFechaHoraDevolucion());
+            double distancia = calcularDistancia(alquiler.getEstacionRetiro(), alquiler.getEstacionDevolucion());
+            TarifaDTO tarifaDTO = obtenerTarifa(alquiler.getIdTarifa());
 
-            if (tarifaOptional.isPresent()) {
-                Tarifa tarifa = tarifaOptional.get();
-                double monto = calcularMonto(alquiler, tarifa.getId());
-                alquiler.setMonto(monto);
-                if (!moneda.equals("ARS")) {
-                    double conversion = new CurrencyConverter().cambioDeMoneda(moneda, monto);
-                    alquiler.setMonto(Double.parseDouble(String.valueOf(conversion)));
-                }
-                alquilerRepository.save(alquiler);
-                return alquiler;
-            }
+            alquiler.setMonto(calcularMonto(minutos, distancia, tarifaDTO, moneda));
+
+            return alquilerRepository.save(alquiler);
+
         }
         return null;
     }
 
-    private double calcularMonto(Alquiler alquiler, long id) {
-        double monto = 0;
-        long duracionEnMinutos = ChronoUnit.MINUTES.between(alquiler.getFechaHoraRetiro(), alquiler.getFechaHoraDevolucion());
+    public Double calcularMonto(double minutos, double distancia, TarifaDTO tarifaDTO, String moneda){
+        // INICIARLIZAR MONTO
+        Double monto = 0D;
 
-        // Se solicita un Alquiler al Microservicio de Tarifas una tarifa en particular
-        // y almacena la respuesta (tarifa solicitada)
-        Tarifa tarifa = (Tarifa) invocarServicio("tarifas", id);
+        // SUMAR MONTO FIJO
+        monto+= tarifaDTO.getMontoFijoAlquiler();
 
-        // Costo fijo por realizar el alquiler
-        monto += tarifa.getMontoFijoAlquiler();
-
-        // Costo por hora completa o fraccionado por minuto
-        if (duracionEnMinutos > 30) {
-            long duracionEnHoras = ChronoUnit.HOURS.between(alquiler.getFechaHoraRetiro(), alquiler.getFechaHoraDevolucion());
-            monto += duracionEnHoras * tarifa.getMontoHora();
-        } else {
-            monto += duracionEnMinutos * tarifa.getMontoMinutoFraccion();
+        // CALCULAR HORAS
+        double horas;
+        if (minutos >=   31 && minutos <= 60){
+            horas = 1;
+        }else {
+            horas = minutos/60;
         }
 
-        // Monto adicional por cada KM que separe la estación de retiro de la estación de devolución
-        // double distancia = calcularDistancia(alquiler.getEstacionRetiro(), alquiler.getEstacionDevolucion());
-        // monto += distancia * tarifa.getMontoKm();
+        // SUMAR MONTO POR HORAS / MINUTOS
+        if(minutos<31){
+            monto += minutos * tarifaDTO.getMontoMinutoFraccion();
+        }else{
+            monto += horas * tarifaDTO.getMontoHora();
+        }
 
-        // Descuento para los días promocionales
-        // No encuentro los dias de la semana en los que hay descuento en la bse de datos..
-        /*if (esDiaPromocional(alquiler.getFechaHoraRetiro())) {
-            double descuento = obtenerDescuento(alquiler.getFechaHoraRetiro());
-            monto -= monto * descuento;
-        }*/
+        // SUMAR MONTO KM
+        monto += distancia * tarifaDTO.getMontoKm();
+
+        // CONVERTIR A MONEDA EXTRANJERA
+        if (!moneda.equals("ARS")) {
+            double conversion = new CurrencyConverter().cambioDeMoneda(moneda, monto);
+            conversion = Double.parseDouble(String.valueOf(conversion));
+            return conversion;
+        }
+
 
         return monto;
     }
 
+    public double calcularMinutos(LocalDateTime fecha1, LocalDateTime fecha2){
+        double diferenciaEnMinutos = ChronoUnit.MINUTES.between(fecha1, fecha2);
+        return diferenciaEnMinutos;
+
+    }
+
+    public TarifaDTO obtenerTarifa(long idTarifa){
+        ResponseEntity<TarifaDTO> responseEntity = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + idTarifa, TarifaDTO.class);
+        TarifaDTO tarifaDTO = responseEntity.getBody();
+        return tarifaDTO;
+    }
+
     private double calcularDistancia(long idEstacionRetiro, long idEstacionDevolucion) {
-        Optional<Estacion> estacionR = (Optional<Estacion>) invocarServicio("estaciones", idEstacionRetiro);
-        Optional<Estacion> estacionD = (Optional<Estacion>) invocarServicio("estaciones", idEstacionDevolucion);
+        ResponseEntity<EstacionDTO> responseEntity = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + idEstacionRetiro, EstacionDTO.class);
+        EstacionDTO estacionRetiroDTO = responseEntity.getBody();
+        ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + idEstacionDevolucion, EstacionDTO.class);
+        EstacionDTO estacionDevolucionDTO = responseEntity2.getBody();
 
-        if (estacionR.isPresent() && estacionD.isPresent()) {
-            Estacion estacionRetiro = estacionR.get();
-            Estacion estacionDevolucion = estacionD.get();
 
-            double latitud1 = estacionRetiro.getLatitud();
-            double longitud1 = estacionRetiro.getLongitud();
-            double latitud2 = estacionDevolucion.getLatitud();
-            double longitud2 = estacionDevolucion.getLongitud();
-
+        if (estacionDevolucionDTO != null && estacionRetiroDTO != null) {
+            double latitud1 = estacionRetiroDTO.getLatitud();
+            double longitud1 = estacionRetiroDTO.getLongitud();
+            double latitud2 = estacionDevolucionDTO.getLatitud();
+            double longitud2 = estacionDevolucionDTO.getLongitud();
             // Calcular la distancia euclídea en grados
             double distancia = Math.sqrt(Math.pow(latitud2 - latitud1, 2) + Math.pow(longitud2 - longitud1, 2));
-
             // Convertir la distancia a KM (1 grado = 110000 m)
-            distancia *= 110000;
+            distancia *= 110;
 
             return distancia;
         }
@@ -203,63 +211,7 @@ public class AlquilerService {
     }
 
 
-    public Object invocarServicio(String tipoServicio, long id) {
 
-        // Creación de una instancia de RestTemplate
-        try {
-            // Creación de la instancia de RequestTemplate
-            RestTemplate template = new RestTemplate();
-
-            switch (tipoServicio) {
-                case "tarifas":
-                    // Se realiza una petición a http://localhost:8082/api/tarifas/{id}, indicando que id
-                    // respuesta de la petición tendrá en su cuerpo a un objeto del tipo Tarifa.
-                    ResponseEntity<Tarifa> resTarifa = template.getForEntity(
-                            "http://localhost:8083/api/tarifas/{id}", Tarifa.class, id
-                    );
-                    // Se comprueba si el código de repuesta es de la familia 200 y entrega el objeto de tipo Tarifa
-                    // para su disposición
-                    if (resTarifa.getStatusCode().is2xxSuccessful()) {
-                        return resTarifa.getBody();
-                    } else {
-                        return resTarifa.getHeaders();
-                    }
-
-                case "alquileres":
-                    // Se realiza una petición a http://localhost:8082/api/alquileres/{id}, indicando que id
-                    // respuesta de la petición tendrá en su cuerpo a un objeto del tipo Alquiler.
-                    ResponseEntity<Alquiler> resAlquiler = template.getForEntity(
-                            "http://localhost:8082/api/alquileres/{id}", Alquiler.class, id
-                    );
-                    // Se comprueba si el código de repuesta es de la familia 200 y entrega el objeto de tipo Tarifa
-                    // para su disposición
-                    if (resAlquiler.getStatusCode().is2xxSuccessful()) {
-                        return resAlquiler.getBody();
-                    } else {
-                        return resAlquiler.getHeaders();
-                    }
-                case "estaciones":
-                    // Se realiza una petición a http://localhost:8082/api/alquileres/{id}, indicando que id
-                    // respuesta de la petición tendrá en su cuerpo a un objeto del tipo Alquiler.
-                    ResponseEntity<Estacion> resEstacion = template.getForEntity(
-                            "http://localhost:8081/api/estaciones/{id}", Estacion.class, id
-                    );
-                    // Se comprueba si el código de repuesta es de la familia 200 y entrega el objeto de tipo Tarifa
-                    // para su disposición
-                    if (resEstacion.getStatusCode().is2xxSuccessful()) {
-                        return resEstacion.getBody();
-                    } else {
-                        return resEstacion.getHeaders();
-                    }
-                default:
-                    return null;
-            }
-
-        } catch (HttpClientErrorException ex) {
-            // La repuesta no es exitosa.
-            return null;
-        }
-    }
 
 
 }

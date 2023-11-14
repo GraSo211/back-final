@@ -47,7 +47,7 @@ public class EstacionService {
         estacionRepository.deleteById(id);
     }
 
-    public Estacion menorDistante(Double latitudC, Double longitudC ){
+    public Estacion getCalcularDistancia(Double latitudC, Double longitudC ){
         //calculamos la distancia de la 1ra estacion y luego la comparamos con las siguientes
         //hacemos esto hasta obtener la menor de todas
         //retornamos esa estacion

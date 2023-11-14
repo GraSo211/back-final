@@ -27,8 +27,6 @@ public class CurrencyConverter {
         JSONObject jsonObject = new JSONObject(jsonResponse);
         double importeConvertido = jsonObject.getDouble("importe");
 
-        // Calcular la tasa de cambio
-
-        return importeConvertido / 1000;
+        return importeConvertido;
     }
 }
