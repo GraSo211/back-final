@@ -35,7 +35,6 @@ public class EstacionService {
         if(estacion.isPresent()){
             Estacion estacionUpdate = estacion.get();
             estacionUpdate.setNombre(estacionB.getNombre());
-            estacionUpdate.setFechaHoraCreacion(estacionB.getFechaHoraCreacion());
             estacionUpdate.setLatitud(estacionB.getLatitud());
             estacionUpdate.setLongitud(estacionB.getLongitud());
             return estacionRepository.save(estacionUpdate);

@@ -35,17 +35,37 @@ public class AlquilerService {
 
         if(!alquilerList.isEmpty()){
             for(Alquiler alquiler : alquilerList){
-                ResponseEntity<EstacionDTO> responseEntity = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionRetiro(), EstacionDTO.class);
+                Long estacionRetiro = alquiler.getEstacionRetiro();
+                Long estacionDevolucion = alquiler.getEstacionDevolucion();
+                Long tarifa = alquiler.getIdTarifa();
+                if(estacionRetiro == null){
+                    estacionRetiro = 0L;
+                }
+                if(estacionDevolucion == null){
+                    estacionDevolucion = 0L;
+                }
+                if(tarifa == null){
+                    tarifa = 0L;
+                }
+
+                ResponseEntity<EstacionDTO> responseEntity = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + estacionRetiro, EstacionDTO.class);
                 EstacionDTO estacionDTO = responseEntity.getBody();
 
-                ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionDevolucion(), EstacionDTO.class);
+
+                ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + estacionDevolucion, EstacionDTO.class);
                 EstacionDTO estacionDTO2 = responseEntity2.getBody();
 
-                ResponseEntity<TarifaDTO> responseEntity3 = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + alquiler.getIdTarifa(), TarifaDTO.class);
+
+                ResponseEntity<TarifaDTO> responseEntity3 = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + tarifa, TarifaDTO.class);
                 TarifaDTO tarifaDTO = responseEntity3.getBody();
+
+
+
+
 
                 ResponseDTO responseDTO = new ResponseDTO();
                 responseDTO.setAlquiler(alquiler);
+
                 responseDTO.setEstacionRetDTO(estacionDTO);
                 responseDTO.setEstacionDevDTO(estacionDTO2);
                 responseDTO.setTarifaDTO(tarifaDTO);
@@ -63,13 +83,25 @@ public class AlquilerService {
         Optional<Alquiler> optionalAlquiler = alquilerRepository.findById(id);
         if (optionalAlquiler.isPresent()) {
             Alquiler alquiler = optionalAlquiler.get();
-            ResponseEntity<EstacionDTO> responseEntity = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionRetiro(), EstacionDTO.class);
+            Long estacionRetiro = alquiler.getEstacionRetiro();
+            Long estacionDevolucion = alquiler.getEstacionDevolucion();
+            Long tarifa = alquiler.getIdTarifa();
+            if(estacionRetiro == null){
+                estacionRetiro = 0L;
+            }
+            if(estacionDevolucion == null){
+                estacionDevolucion = 0L;
+            }
+            if(tarifa == null){
+                tarifa = 0L;
+            }
+            ResponseEntity<EstacionDTO> responseEntity = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + estacionRetiro, EstacionDTO.class);
             EstacionDTO estacionDTO = responseEntity.getBody();
 
-            ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + alquiler.getEstacionDevolucion(), EstacionDTO.class);
+            ResponseEntity<EstacionDTO> responseEntity2 = restTemplate.getForEntity("http://localhost:8081/api/estaciones/" + estacionDevolucion, EstacionDTO.class);
             EstacionDTO estacionDTO2 = responseEntity2.getBody();
 
-            ResponseEntity<TarifaDTO> responseEntity3 = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + alquiler.getIdTarifa(), TarifaDTO.class);
+            ResponseEntity<TarifaDTO> responseEntity3 = restTemplate.getForEntity("http://localhost:8083/api/tarifas/" + tarifa, TarifaDTO.class);
             TarifaDTO tarifaDTO = responseEntity3.getBody();
 
             responseDTO.setAlquiler(alquiler);
@@ -262,9 +294,6 @@ public class AlquilerService {
         }
         return null;
     }
-
-
-
 
 }
 
