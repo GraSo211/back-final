@@ -13,9 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.DayOfWeek;
 import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -125,11 +127,12 @@ public class AlquilerService {
             alquiler.setFechaHoraDevolucion(LocalDateTime.now());
             alquiler.setEstado(2); // Estado finalizado
             alquiler.setEstacionDevolucion(alquilerB.getEstacionDevolucion());
-            alquiler.setIdTarifa(alquilerB.getIdTarifa());
+            Long idTarifa = obtenerIdTarifa(alquiler.getFechaHoraRetiro());
+            alquiler.setIdTarifa(idTarifa);
 
             double minutos = calcularMinutos(alquiler.getFechaHoraRetiro(), alquiler.getFechaHoraDevolucion());
             double distancia = calcularDistancia(alquiler.getEstacionRetiro(), alquiler.getEstacionDevolucion());
-            TarifaDTO tarifaDTO = obtenerTarifa(alquiler.getIdTarifa());
+            TarifaDTO tarifaDTO = obtenerTarifa(idTarifa);
 
             alquiler.setMonto(calcularMonto(minutos, distancia, tarifaDTO, moneda));
 
@@ -170,8 +173,6 @@ public class AlquilerService {
             conversion = Double.parseDouble(String.valueOf(conversion));
             return conversion;
         }
-
-
         return monto;
     }
 
@@ -211,8 +212,61 @@ public class AlquilerService {
     }
 
 
+    public Long obtenerIdTarifa(LocalDateTime fechaRetiro){
+        // OBTENEMOS TODAS LAS TARIFAS POSIBLES:
+        ResponseEntity<TarifaDTO[]> responseEntity = restTemplate.getForEntity("http://localhost:8083/api/tarifas/", TarifaDTO[].class);
+        TarifaDTO[] tarifasDTOArray = responseEntity.getBody();
+        List<TarifaDTO> tarifaDTOList = Arrays.asList(tarifasDTOArray);
+        int anio = fechaRetiro.getYear();
+        int mes = fechaRetiro.getMonthValue();
+        int dia = fechaRetiro.getDayOfMonth();
+        List<TarifaDTO> tarifasDescuento = new ArrayList<>();
+        List<TarifaDTO> tarifasNormales = new ArrayList<>();
+
+        // SEPARAMOS EN 2 LISTAS SEGUN SEAN DE DESCUENTO O NORMALES
+        for (TarifaDTO tarifaDTO:
+             tarifaDTOList) {
+            // AVERIGUAMOS SI ES TARIFA DE DESCUENTO O NORMAL
+            if (tarifaDTO.getTipoTarifa() == 1){
+                tarifasNormales.add(tarifaDTO);
+            }else{
+                tarifasDescuento.add(tarifaDTO);
+            }
+        }
+
+        // ANALIZAMOS PRIMERO LAS DE DESCUENTO PORQUE REQUIEREN DIA ESPECIFICO
+        for (TarifaDTO tarifaDTODescuento:
+             tarifasDescuento) {
+            // AVERIGUAMOS SI EL DIA DE LA FECHA DE RETIRO ERA DIA DE DESCUENTO
+
+            // COINCIDEN EN AÑO
+            if(tarifaDTODescuento.getAnio().equals(anio)){
+                // COINCIDEN EN MES
+                if (tarifaDTODescuento.getMes().equals(mes)){
+                    // COINCIDEN EN DIA
+                    if (tarifaDTODescuento.getDiaMes().equals(dia)){
+                        return tarifaDTODescuento.getId();
+                    }
+                }
+            }
+
+        }
+        // CON LO ANTERIOR GARANTIZAMOS QUE SI CONSEGUIMOS SALIR DEL BUCLE FOREACH ENTONCES EL DIA DEL RETIRO NO ERA DIA DE DESCUENTO
+        // AVERIGUAMOS EN QUE DIA DE LA SEMANA ESTAMOS
+        int diaSemana = fechaRetiro.getDayOfWeek().getValue();
+        for (TarifaDTO tarifaDTONormal:
+             tarifasNormales) {
+            if ( tarifaDTONormal.getDiaSemana() == diaSemana){
+                return tarifaDTONormal.getId();
+            }
+        }
+        return null;
+    }
+
 
 
 
 }
+
+
 
